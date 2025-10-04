@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INDRA Weather Map</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #a78bfa, #60a5fa, #22d3ee);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .weather-map-card {
+            width: 360px;
+            max-width: 90vw;
+            background: linear-gradient(to bottom, #2c2a4a, #6b5b8c);
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            margin: 20px auto;
+        }
+
+        h2 {
+            margin: 10px 0 20px 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #FFC107;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex-grow: 1;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.15);
+            color: rgba(255, 255, 255, 0.7);
+            border: none;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        button.active {
+            background-color: #FFC107;
+            color: #333;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+        }
+
+        .map-container {
+            width: 100%;
+            height: 650px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="weather-map-card">
+        <h2>Weather Radar</h2>
+        <div class="button-container">
+            <button id="btnWind" class="active">Wind</button>
+            <button id="btnRain">Rain</button>
+            <button id="btnTemp">Temperature</button>
+        </div>
+        <div class="map-container">
+            <iframe id="windyFrame" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <script>
+        const iframe = document.getElementById('windyFrame');
+        const layers = { wind: 'wind', rain: 'rain', temp: 'temp' };
+
+        // Defaults (Delhi)
+        let userLat = 28.6;
+        let userLon = 77.2;
+        let userZoom = 5;
+
+        // Build iframe URL with given layer
+        function setLayer(layer) {
+            const newURL = `https://embed.windy.com/embed2.html?lat=${userLat}&lon=${userLon}&zoom=${userZoom}&level=surface&overlay=${layer}&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km/h&metricTemp=°C&radarRange=-1`;
+            iframe.src = newURL;
+
+            // Button highlighting
+            document.querySelectorAll('.button-container button')
+                .forEach(btn => btn.classList.remove('active'));
+            const targetId = 'btn' + layer.charAt(0).toUpperCase() + layer.slice(1);
+            const targetButton = document.getElementById(targetId);
+            if (targetButton) targetButton.classList.add('active');
+        }
+
+        // Attach button events
+        function initButtons() {
+            document.getElementById('btnWind').addEventListener('click', () => setLayer(layers.wind));
+            document.getElementById('btnRain').addEventListener('click', () => setLayer(layers.rain));
+            document.getElementById('btnTemp').addEventListener('click', () => setLayer(layers.temp));
+        }
+
+        // Try geolocation
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                userLat = pos.coords.latitude;
+                userLon = pos.coords.longitude;
+                userZoom = 15; // closer zoom
+                setLayer(layers.wind); // load map at current location
+                initButtons();
+            },
+            (err) => {
+                console.warn("Geolocation failed/denied. Using Delhi.");
+                setLayer(layers.wind); // fallback
+                initButtons();
+            }
+        );
+    </script>
+</body>
+
+</html>
